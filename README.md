@@ -53,4 +53,27 @@ In the updated code, we add an additional request path to simulate slow response
         ("HTTP/1.1 200 OK", "hello.html")
     }
     ```
-When the request path is `/sleep`, the server will sleep for 5 seconds before rendering the successful HTML page. If we enter the path `/sleep` and then in a new tab enter the path `/`, the latter will wait until `/sleep` has slept for 5 seconds before loading.
+When the request path is `/sleep`, the server will sleep for 5 seconds before rendering the successful HTML page. If we enter the path `/sleep` and then in a new tab enter the path `/`, the latter will wait until `/sleep` has slept for 5 seconds before loading because there's only a single thread.
+
+---
+
+### Commit 5 reflection notes
+> How does `ThreadPool` work?
+
+#### `ThreadPool` Creation
+1. We create a new `ThreadPool` with `ThreadPool::new` and specify the size as its argument.
+1. Inside the `new` function, it will create an `mpsc::channel` for job communication and assign it to the `sender` and `receiver`.
+1. It wraps the `receiver` with `Arc::new(Mutex::new(receiver))` to ensure multiple threads can access the receiver safely.
+1. Then, the `new` function iterates to create `Worker` instances and add them to the `workers` vector.
+1. The `new` function returns `ThreadPool` struct.
+
+#### `Worker` Creation
+1. `Worker` takes an ID and reference to the shared receiver as its arguments.
+1. It will spawn a thread that will continuously loop to receive a job, print a message that indicates this worker is processing a job, and finally execute the job.
+
+#### `Job` Execution
+1. `ThreadPool` also has an execute function that will take a job, wrap it inside a `Box`, and send it to the channel.
+1. The job will be executed by the workers.
+
+#### `Job` Type
+`Job` is a boxed closure that can only be executed once, is safe to send between threads, and has static lifetime.
