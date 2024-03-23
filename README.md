@@ -40,3 +40,17 @@ We can split it by checking the request path and handling it differently based o
 
 The refactoring is needed to avoid duplications in the code (DRY principle) because the only differences are the value of `status_line` and which HTML file it should return. Refactoring also makes the code easier to modify if we want it to handle other paths with the same logic in the future.
 ![Commit 3 screen capture](/assets/images/commit3.png)
+
+---
+
+### Commit 4 reflection notes
+> How does it response slow and why does it work like that?
+
+In the updated code, we add an additional request path to simulate slow response, which is the `/sleep` path by adding:
+    ```
+    "GET /sleep HTTP/1.1" => {
+        thread::sleep(Duration::from_secs(5));
+        ("HTTP/1.1 200 OK", "hello.html")
+    }
+    ```
+When the request path is `/sleep`, the server will sleep for 5 seconds before rendering the successful HTML page. If we enter the path `/sleep` and then in a new tab enter the path `/`, the latter will wait until `/sleep` has slept for 5 seconds before loading.
